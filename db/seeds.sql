@@ -34,16 +34,3 @@ VALUES ('John', "Smith", 3, 5),
        ('Bruce', 'Peters', 4, 1),
        ('Barbara', 'Davis', 7, null),
        ('Francisco', 'Mendez', 11, null);
-
-
--- create role view
-CREATE VIEW role_info AS
-(SELECT 
-role.id AS id,
-role.title AS title,
-role.salary AS salary,
-department.name AS department_name
-FROM role
-JOIN department
-ON role.department_id = department.id
-);
