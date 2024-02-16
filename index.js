@@ -72,3 +72,32 @@ function promptOne() {
     if (err) throw err;
   });
 }
+
+
+// viewAllEmployees function
+function viewAllEmployees() {
+  // create query string to select all employees and their data from the employee table in the database
+  let query =
+  `SELECT
+        employee.id,
+        employee.first_name,
+        employee.last_name,
+        role.title,
+        department.name AS department,
+        role.salary,
+        CONCAT(manager.first_name, ' ', manager.last_name) AS manager
+    FROM employee
+    LEFT JOIN role
+        ON employee.role_id = role.id
+    LEFT JOIN department
+        ON department.id = role.department_id
+    LEFT JOIN employee manager
+        ON manager.id = employee.manager_id`
+
+    // console.table query results and throw error if there is an issue with the SQL command
+    sequelize.query(query, (err, res) => {
+      if (err) throw err;
+      console.table(res);
+      promptOne();
+    });
+}
