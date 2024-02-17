@@ -101,3 +101,28 @@ function viewAllEmployees() {
       promptOne();
     });
 }
+
+// function for adding an employee
+function addEmployee() {
+  let query = 
+  `SELECT
+        role.id,
+        role.title,
+        role.salary
+    FROM role`
+
+   // sequelize query method 
+   sequelize.query(query, (err, res) => {
+     if (err) throw err;
+
+     // maps over array and creates a new array called role
+     const role = res.map(({ id, title, salary}) => ({
+        value: id,
+        title: `${title}`,
+        salary: `${salary}`
+     }));
+
+     console.table(res);
+     newEmployeeRoles(role);
+   });
+}
