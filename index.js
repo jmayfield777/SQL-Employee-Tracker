@@ -126,3 +126,38 @@ function addEmployee() {
      newEmployeeRoles(role);
    });
 }
+
+// function to handle the addition of a new employees's role
+function newEmployeeRoles() {
+  inquirer
+    .prompt([
+      {
+        type: 'input',
+        name: 'firstName',
+        message: 'Employee First Name: '
+      },
+      {
+        type: 'input',
+        name: 'lastName',
+        message: 'Employee Last Name: '
+      },
+      {
+        type: 'list',
+        name: 'roleId',
+        message: 'Employee role: ',
+        choices: role
+      }
+    // uses query method to insert the data received from the inquirer prompt
+    ]).then((res) => {
+      let query = `INSERT INTO employee SET ?`
+      sequelize.query(query, {
+        first_name: res.firstName,
+        last_name: res.lastName,
+        role_id: res.roleId
+      }, (err, res) => {
+        if (err) throw err;
+        // calls promptOne() to restart the initial prompts
+        promptOne();
+      });
+    });
+}
