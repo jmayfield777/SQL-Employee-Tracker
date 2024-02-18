@@ -297,3 +297,31 @@ function viewAllRoles() {
     promptOne();
   });
 }
+
+
+// functions to add role
+function addRole() {
+  let query =
+  `SELECT
+        department.id,
+        department.name,
+        role.salary,
+   FROM employee
+   JOIN role
+        ON employee.role_id = role.id
+   JOIN department
+        ON department.id = role.department_id
+   GROUP BY department.id, department.name`
+
+
+   sequelize.query(query, (err, res) => {
+    if (err) throw err;
+    const department = res.map(({ id, name }) => ({
+      value: id,
+      name: `${id} ${name}`
+    }));
+    console.table(res);
+    addToRole(department);
+   });
+}
+
