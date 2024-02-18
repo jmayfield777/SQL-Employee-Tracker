@@ -325,3 +325,37 @@ function addRole() {
    });
 }
 
+
+function addToRole() {
+  inquirer
+    .prompt([
+      {
+        type: 'list',
+        name: 'title',
+        message: 'Enter role title: '
+      },
+      {
+        type: 'input',
+        name: 'salary',
+        message: 'Enter role salary: '
+      },
+      {
+        type: 'list',
+        name: 'department',
+        message: 'Enter the department name: ',
+        choices: department
+      },
+
+    ]).then((res) => {
+      let query =  `INSERT INTO role SET ?`;
+      
+      sequelize.query(query, {
+        title: res.title,
+        salary: res.salary,
+        department_id: res.department
+      }, (err, res) => {
+        if (err) throw err;
+        promptOne();
+      });
+    });
+}
