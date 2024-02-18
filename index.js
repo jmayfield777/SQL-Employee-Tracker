@@ -359,3 +359,30 @@ function addToRole() {
       });
     });
 }
+
+
+// function to view all departments
+function viewAllDepartments() {
+  let query =
+  `SELECT
+        department.id,
+        department.name,
+        role.salary
+   FROM employee
+   LEFT JOIN role
+        ON employee.role_id = role.id
+   LEFT JOIN department
+        ON  department.id = role.department_id
+   GROUP BY department.id = department.name, role.salary`
+
+
+   sequelize.query(query, (err, res) => {
+    if (err) throw err;
+    const deptOptions = res.map((choices) => ({
+        value: choices.id,
+        name: choices.name
+    }));
+    console.table(res);
+    getDepartment(deptOptions);
+   });
+}
