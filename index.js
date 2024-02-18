@@ -192,3 +192,25 @@ function updateEmployee() {
       updateRole(employee);
     });
 }
+
+// function to update employee role
+function updateRole(employee) {
+  let query =
+  `SELECT
+    role.id,
+    role.title,
+    role.salary
+  FROM role`
+
+  
+  sequelize.query(query, (err, res) => {
+    if (err) throw err;
+    let roleOptions = res.map(({ id, title, salary }) => ({
+      value: id,
+      title: `${title}`,
+      salary: `${salary}`
+    }));
+    console.table(res);
+    getUpdatedRole(employee, roleOptions);
+  });
+}
