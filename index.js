@@ -241,3 +241,25 @@ function getUpdatedRole(employee, roleOptions) {
       });
     });
 }
+
+
+// function to retrieve a table of employees to be removed from database
+function removeEmployee() {
+  let query =
+  `SELECT
+        employee.id,
+        employee.first_name,
+        employee.last_name,
+   FROM employee`
+
+
+   sequelize.query(query, (err, res) => {
+    if (err) throw err;
+    const employee = res.map(({ id, first_name, last_name }) => ({
+        value: id, 
+        name: `${id} ${first_name} ${last_name}`
+    }));
+    console.table(res);
+    getDelete(employee);
+   });
+}
