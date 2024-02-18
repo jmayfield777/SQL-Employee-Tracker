@@ -435,3 +435,24 @@ function getDepartment(deptOptions) {
        });
     });
 }
+
+
+// function to add new department to db
+function addDepartment() {
+  inquirer
+    .prompt([
+      {
+        type: 'list',
+        name: 'name',
+        message: 'Enter department name: '
+      },
+
+    ]).then((res) => {
+      let query = `INSERT INTO department SET ?`;
+
+      sequelize.query(query, { name: res.name }, (err, res) => {
+        if (err) throw err;
+        promptOne(); 
+      });
+    });
+}
