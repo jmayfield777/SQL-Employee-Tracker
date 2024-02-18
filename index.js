@@ -263,3 +263,24 @@ function removeEmployee() {
     getDelete(employee);
    });
 }
+
+
+// function to delete employee
+function getDelete(employee) {
+  inquirer
+    .prompt([
+      {
+        type: 'list',
+        name: 'employee',
+        message: 'Employee to be deleted: ',
+        choices: employee
+      },
+      
+    ]).then((res) => {
+      let query = `DELETE FROM employee WHERE ?`;
+      sequelize.query(query, { id: res.employee }, (err, res) => {
+        if (err) throw err;
+        promptOne();
+      });
+    });
+}
