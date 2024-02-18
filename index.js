@@ -102,7 +102,7 @@ function viewAllEmployees() {
     });
 }
 
-// function for adding an employee
+// functions to add new employees
 function addEmployee() {
   let query = 
   `SELECT
@@ -127,7 +127,7 @@ function addEmployee() {
    });
 }
 
-// function to handle the addition of a new employees's role
+
 function newEmployeeRoles() {
   inquirer
     .prompt([
@@ -162,7 +162,7 @@ function newEmployeeRoles() {
     });
 }
 
-// function to pull down employee options to be chosen by the user when updating employee information
+// functions to update employees
 function updateEmployee() {
   let query =
   `SELECT
@@ -193,7 +193,7 @@ function updateEmployee() {
     });
 }
 
-// function to pull down employee role options to be chosen by the user when adding a new employee
+
 function updateRole(employee) {
   let query =
   `SELECT
@@ -216,7 +216,6 @@ function updateRole(employee) {
 }
 
 
-// function that allows the user to update the role of an employee in the database by selecting the employee and new role from a list of options
 function getUpdatedRole(employee, roleOptions) {
   inquirer
     .prompt([
@@ -243,7 +242,7 @@ function getUpdatedRole(employee, roleOptions) {
 }
 
 
-// function to retrieve a table of employees to be removed from database
+// functions to delete employees
 function removeEmployee() {
   let query =
   `SELECT
@@ -265,7 +264,6 @@ function removeEmployee() {
 }
 
 
-// function to delete employee
 function getDelete(employee) {
   inquirer
     .prompt([
