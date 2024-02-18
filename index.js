@@ -162,7 +162,7 @@ function newEmployeeRoles() {
     });
 }
 
-// function to update employee roles
+// function to pull down employee options to be chosen by the user when updating employee information
 function updateEmployee() {
   let query =
   `SELECT
@@ -193,7 +193,7 @@ function updateEmployee() {
     });
 }
 
-// function to update employee role
+// function to pull down employee role options to be chosen by the user when adding a new employee
 function updateRole(employee) {
   let query =
   `SELECT
@@ -213,4 +213,31 @@ function updateRole(employee) {
     console.table(res);
     getUpdatedRole(employee, roleOptions);
   });
+}
+
+
+// function that allows the user to update the role of an employee in the database by selecting the employee and new role from a list of options
+function getUpdatedRole(employee, roleOptions) {
+  inquirer
+    .prompt([
+      {
+        type: 'list',
+        name: 'employee',
+        message: 'Employee role to update: ',
+        choices: employee
+      },
+      {
+        type: 'list',
+        name: 'role',
+        message: 'Select role: ',
+        choices: roleOptions
+      },
+
+    ]).then((res) => {
+      let query = `UPDATE employee SET role_id = ? WHERE id = ?`;
+      sequelize.query(query, [res.role, res.employee], (err, res) => {
+        if (err) throw err;
+        promptOne();
+      });
+    });
 }
