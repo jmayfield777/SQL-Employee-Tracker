@@ -364,25 +364,74 @@ function addToRole() {
 // function to view all departments
 function viewAllDepartments() {
   let query =
-  `SELECT
-        department.id,
-        department.name,
-        role.salary
-   FROM employee
-   LEFT JOIN role
-        ON employee.role_id = role.id
-   LEFT JOIN department
-        ON  department.id = role.department_id
-   GROUP BY department.id = department.name, role.salary`
+  `SELECT *
+  FROM department`
 
 
-   sequelize.query(query, (err, res) => {
-    if (err) throw err;
-    const deptOptions = res.map((choices) => ({
-        value: choices.id,
-        name: choices.name
-    }));
+  sequelize.query(query, (err, res) => {
     console.table(res);
-    getDepartment(deptOptions);
-   });
+    promptOne();
+  });
+}
+
+
+// function to view all employees by department
+function viewAllEmployeesByDepartment() {
+    let query =
+    `SELECT
+          department.id,
+          department.name,
+          role.salary
+     FROM employee
+     LEFT JOIN role
+          ON employee.role_id = role.id
+     LEFT JOIN department
+          ON  department.id = role.department_id
+     GROUP BY department.id = department.name, role.salary`
+  
+  
+     sequelize.query(query, (err, res) => {
+      if (err) throw err;
+      const deptOptions = res.map((choices) => ({
+          value: choices.id,
+          name: choices.name
+      }));
+      console.table(res);
+      getDepartment(deptOptions);
+     });
+}
+
+
+function getDepartment(deptOptions) {
+  inquirer
+    .prompt([
+      {
+        type: 'list',
+        name: 'department',
+        message: 'Enter department: ',
+        choices: deptOptions
+      },
+
+    ]).then((res) => {
+      let query =
+      `SELECT
+            employee.id,
+            employee.first_name,
+            employee.last_name,
+            role.title,
+            department.name
+       FROM employee
+       JOIN role
+            ON employee.role_id = role.id
+       JOIN department
+            ON department.id = role.department_id
+       WHERE department.id = ?`
+
+    
+       sequelize.query(query, res.department, (err, res) => {
+        if (err) throw err;
+        promptOne();
+        console.table(res);
+       });
+    });
 }
