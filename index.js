@@ -284,3 +284,18 @@ function getDelete(employee) {
       });
     });
 }
+
+
+// function to view all roles
+function viewAllRoles() {
+  let query =
+  `SELECT *
+  FROM role`
+
+
+  sequelize.query(query, (err, res) => {
+    if (err) throw err;
+    console.table(res);
+    promptOne();
+  });
+}
