@@ -1,17 +1,16 @@
 // import dependencies
 const mysql = require('mysql2');
 const inquirer = require('inquirer');
-const sequelize = require('./config/connection.js');
 require('console.table');
-
-// connect to staff_db
-sequelize.connect(function (err) {
-  if (err) throw err;
-
-  // if no error run inquirer promptOne
-  promptOne();
-  console.log('You are now connected to the database');
-});
+const db = mysql.createConnection(
+    {
+      host: 'localhost',
+      user: 'root',
+      password: '',
+      database: 'staff_db'
+    },
+    console.log(`Connected to the staff_db database.`)
+);
 
 
 // inquirer promptOne function
@@ -44,7 +43,7 @@ function promptOne() {
         addEmployee();
         break;
       case 'Update Employee Role':
-        updateEmployee();
+        updateEmployeeRole();
         break;
       case 'Remove Employee':
         removeEmployee();
@@ -65,7 +64,7 @@ function promptOne() {
         addDepartment();
         break;
       case 'Quit':
-        sequelize.end();
+        db.end();
         break;
     }
   }).catch((err) => {
@@ -95,7 +94,7 @@ function viewAllEmployees() {
         ON manager.id = employee.manager_id`
 
     // console.table query results and throw error if there is an issue with the SQL command
-    sequelize.query(query, (err, res) => {
+    db.query(query, (err, res) => {
       if (err) throw err;
       console.table(res);
       promptOne();
@@ -112,11 +111,11 @@ function addEmployee() {
     FROM role`
 
    // sequelize query method 
-   sequelize.query(query, (err, res) => {
+   db.query(query, (err, res) => {
      if (err) throw err;
 
      // maps over array and creates a new array called role
-     const role = res.map(({ id, title, salary}) => ({
+     const role = res.map(({ id, title, salary }) => ({
         value: id,
         title: `${title}`,
         salary: `${salary}`
@@ -128,7 +127,10 @@ function addEmployee() {
 }
 
 
-function newEmployeeRoles() {
+
+function newEmployeeRoles(role) {
+
+    
   inquirer
     .prompt([
       {
@@ -148,13 +150,13 @@ function newEmployeeRoles() {
         choices: role
       }
     // uses query method to insert the data received from the inquirer prompt
-    ]).then((res) => {
+    ]).then((response) => {
       let query = `INSERT INTO employee SET ?`
-      sequelize.query(query, {
-        first_name: res.firstName,
-        last_name: res.lastName,
-        role_id: res.roleId
-      }, (err, res) => {
+      db.query(query, {
+        first_name: response.firstName,
+        last_name: response.lastName,
+        role_id: response.roleId
+      }, (err, result) => {
         if (err) throw err;
         // calls promptOne() to restart the initial prompts
         promptOne();
@@ -162,83 +164,50 @@ function newEmployeeRoles() {
     });
 }
 
-// functions to update employees
-function updateEmployee() {
-  let query =
-  `SELECT
-        employee.id,
-        employee.first_name,
-        employee.last_name,
-        role.title,
-        department.name,
-        role.salary,
-        CONCAT(manager.first_name, ' ', manager.last_name) AS manager
-    FROM employee
-    JOIN role
-        ON employee.role_id = role.id
-    JOIN department 
-        ON department.id = role.department_id
-    JOIN employee manager
-        ON manager.id = employee.manager_id`
-    
-    
-    sequelize.query(query, (err, res) => {
-      if (err) throw err;
-      const employee = res.map(({ id, first_name, last_name }) => ({
-        value: id,
-        name: `${first_name} ${last_name}`
-      }));
-      console.table(res);
-      updateRole(employee);
-    });
-}
 
+// update employee role
+const updateEmployeeRole = () => {
+    const roleArray= [];
+    const employeeArray= [];
+    // populates role array with all roles
+    db.query(`SELECT * FROM role`, function (err, results) {
+        for (let i = 0; i < results.length; i++) {
+            roleArray.push(results[i].title);
+        }
+    // populates employee array with all employees
+    db.query(`SELECT * FROM employee`, function (err, results) {
+        for (let i = 0; i < results.length; i++) {
+            let employeeName = `${results[i].first_name} ${results[i].last_name}`
+            employeeArray.push(employeeName);
+        }
+        return inquirer.prompt([
+            {
+                type: 'list',
+                message: "Which employee do you want to update?",
+                name: 'employee',
+                choices: employeeArray
+            },
+            {
+                type: 'list',
+                message: "What is the employee's new role?",
+                name: 'role',
+                choices: roleArray
+            },
+        ]).then((data) => {
+            // get role id
+            db.query(`SELECT id FROM role WHERE role.title = ?;`, data.role, (err, results) => {
+                role_id = results[0].id;
+                db.query(`SELECT id FROM employee WHERE employee.first_name = ? AND employee.last_name = ?;`, data.employee.split(" "), (err, results) => {
+                    db.query(`UPDATE employee SET role_id = ? WHERE id = ?;`, [role_id, results[0].id], (err, results) => {
+                        console.log("\nEmployee role updated. See below:");
+                        viewAllEmployees();
+                    })
+                })
 
-function updateRole(employee) {
-  let query =
-  `SELECT
-    role.id,
-    role.title,
-    role.salary
-  FROM role`
-
-  
-  sequelize.query(query, (err, res) => {
-    if (err) throw err;
-    let roleOptions = res.map(({ id, title, salary }) => ({
-      value: id,
-      title: `${title}`,
-      salary: `${salary}`
-    }));
-    console.table(res);
-    getUpdatedRole(employee, roleOptions);
-  });
-}
-
-
-function getUpdatedRole(employee, roleOptions) {
-  inquirer
-    .prompt([
-      {
-        type: 'list',
-        name: 'employee',
-        message: 'Employee role to update: ',
-        choices: employee
-      },
-      {
-        type: 'list',
-        name: 'role',
-        message: 'Select role: ',
-        choices: roleOptions
-      },
-
-    ]).then((res) => {
-      let query = `UPDATE employee SET role_id = ? WHERE id = ?`;
-      sequelize.query(query, [res.role, res.employee], (err, res) => {
-        if (err) throw err;
-        promptOne();
-      });
-    });
+            })
+        })
+    })
+})
 }
 
 
@@ -248,11 +217,11 @@ function removeEmployee() {
   `SELECT
         employee.id,
         employee.first_name,
-        employee.last_name,
+        employee.last_name
    FROM employee`
 
 
-   sequelize.query(query, (err, res) => {
+   db.query(query, (err, res) => {
     if (err) throw err;
     const employee = res.map(({ id, first_name, last_name }) => ({
         value: id, 
@@ -276,7 +245,7 @@ function getDelete(employee) {
       
     ]).then((res) => {
       let query = `DELETE FROM employee WHERE ?`;
-      sequelize.query(query, { id: res.employee }, (err, res) => {
+      db.query(query, { id: res.employee }, (err, res) => {
         if (err) throw err;
         promptOne();
       });
@@ -291,7 +260,7 @@ function viewAllRoles() {
   FROM role`
 
 
-  sequelize.query(query, (err, res) => {
+  db.query(query, (err, res) => {
     if (err) throw err;
     console.table(res);
     promptOne();
@@ -301,11 +270,14 @@ function viewAllRoles() {
 
 // functions to add role
 function addRole() {
+  // define empty department array
+  let department = [];
+
   let query =
   `SELECT
         department.id,
         department.name,
-        role.salary,
+        MAX(role.salary) AS max_salary
    FROM employee
    JOIN role
         ON employee.role_id = role.id
@@ -314,9 +286,9 @@ function addRole() {
    GROUP BY department.id, department.name`
 
 
-   sequelize.query(query, (err, res) => {
+   db.query(query, (err, res) => {
     if (err) throw err;
-    const department = res.map(({ id, name }) => ({
+    department = res.map(({ id, name }) => ({
       value: id,
       name: `${id} ${name}`
     }));
@@ -326,11 +298,11 @@ function addRole() {
 }
 
 
-function addToRole() {
+function addToRole(department) {
   inquirer
     .prompt([
       {
-        type: 'list',
+        type: 'input',
         name: 'title',
         message: 'Enter role title: '
       },
@@ -349,7 +321,7 @@ function addToRole() {
     ]).then((res) => {
       let query =  `INSERT INTO role SET ?`;
       
-      sequelize.query(query, {
+      db.query(query, {
         title: res.title,
         salary: res.salary,
         department_id: res.department
@@ -368,7 +340,7 @@ function viewAllDepartments() {
   FROM department`
 
 
-  sequelize.query(query, (err, res) => {
+  db.query(query, (err, res) => {
     console.table(res);
     promptOne();
   });
@@ -387,10 +359,10 @@ function viewAllEmployeesByDepartment() {
           ON employee.role_id = role.id
      LEFT JOIN department
           ON  department.id = role.department_id
-     GROUP BY department.id = department.name, role.salary`
+     GROUP BY department.id, department.name, role.salary`
   
   
-     sequelize.query(query, (err, res) => {
+     db.query(query, (err, res) => {
       if (err) throw err;
       const deptOptions = res.map((choices) => ({
           value: choices.id,
@@ -428,7 +400,7 @@ function getDepartment(deptOptions) {
        WHERE department.id = ?`
 
     
-       sequelize.query(query, res.department, (err, res) => {
+       db.query(query, res.department, (err, res) => {
         if (err) throw err;
         promptOne();
         console.table(res);
@@ -442,7 +414,7 @@ function addDepartment() {
   inquirer
     .prompt([
       {
-        type: 'list',
+        type: 'input',
         name: 'name',
         message: 'Enter department name: '
       },
@@ -450,9 +422,12 @@ function addDepartment() {
     ]).then((res) => {
       let query = `INSERT INTO department SET ?`;
 
-      sequelize.query(query, { name: res.name }, (err, res) => {
+      db.query(query, { name: res.name }, (err, res) => {
         if (err) throw err;
         promptOne(); 
       });
     });
 }
+
+
+promptOne();
